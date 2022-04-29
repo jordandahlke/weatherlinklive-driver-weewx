@@ -69,7 +69,7 @@ class WLLDriverAPI():
     def __init__(self, api_parameters):
 
         # Define dict of sensor ID for Weatherlink.com
-        self.dict_sensor_type = {'iss': {23, 24, 27, 28, 43, 44, 45, 46, 48, 49, 50,
+        self.dict_sensor_type = {'iss': {23, 24, 27, 28, 37, 43, 44, 45, 46, 48, 49, 50,
                                          51, 76, 77, 78, 79, 80, 81, 82, 83},
                                  'extraTemp1': {55}, 'extraTemp2': {55}, 'extraTemp3': {55}, 'extraTemp4': {55},
                                  'extraTemp5': {55},
@@ -153,19 +153,9 @@ class WLLDriverAPI():
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    # Function for create URL for Weatherlink.com API v2 ---------------------------------------------------------------
+    # Function for create URL for historic readings via Weatherlink.com API v2 ---------------------------------------------------------------
 
-    def WLAPIv2(self, start_timestamp, end_timestamp):
-
-        parameters = {
-            "api-key": str(self.api_parameters['wl_apikey']),
-            "api-secret": str(self.api_parameters['wl_apisecret']),
-            "end-timestamp": str(end_timestamp),
-            "start-timestamp": str(start_timestamp),
-            "station-id": str(self.api_parameters['wl_stationid']),
-            "t": int(time.time())
-        }
-
+    def WLAPIv2_signature(self, parameters):
         apiSecret = parameters["api-secret"]
         parameters.pop("api-secret", None)
 
@@ -179,6 +169,25 @@ class WLLDriverAPI():
             hashlib.sha256
         ).hexdigest()
 
+        return apiSignature
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    # Function for create URL for historic readings via Weatherlink.com API v2 ---------------------------------------------------------------
+
+    def WLAPIv2(self, start_timestamp, end_timestamp):
+
+        parameters = {
+            "api-key": str(self.api_parameters['wl_apikey']),
+            "api-secret": str(self.api_parameters['wl_apisecret']),
+            "end-timestamp": str(end_timestamp),
+            "start-timestamp": str(start_timestamp),
+            "station-id": str(self.api_parameters['wl_stationid']),
+            "t": int(time.time())
+        }
+
+        apiSignature = self.WLAPIv2_signature(parameters)
+
         url_wlapiv2 = "https://api.weatherlink.com/v2/historic/{}?api-key={}&t={}" \
                       "&start-timestamp={}&end-timestamp={}&api-signature={}" \
             .format(parameters["station-id"], parameters["api-key"], parameters["t"], parameters["start-timestamp"],
@@ -187,6 +196,25 @@ class WLLDriverAPI():
         return url_wlapiv2
 
     # ------------------------------------------------------------------------------------------------------------------
+
+    # Function for create URL for current readings via Weatherlink.com API v2 ---------------------------------------------------------------
+
+    def WLAPIv2_current(self):
+
+        parameters = {
+            "api-key": str(self.api_parameters['wl_apikey']),
+            "api-secret": str(self.api_parameters['wl_apisecret']),
+            "station-id": str(self.api_parameters['wl_stationid']),
+            "t": int(time.time())
+        }
+
+        apiSignature = self.WLAPIv2_signature(parameters)
+
+        url_wlapiv2 = "https://api.weatherlink.com/v2/current/{}?api-key={}&t={}&api-signature={}" \
+            .format(parameters["station-id"], parameters["api-key"], parameters["t"],
+                    apiSignature)
+
+        return url_wlapiv2
 
     # Functions for retrieve data : ------------------------------------------------------------------------------------
 
